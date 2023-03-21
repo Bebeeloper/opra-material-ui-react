@@ -2,6 +2,8 @@ import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 // import { sentenceCase } from 'change-case';
 import { useState, useEffect } from 'react';
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
 // @mui
 import {
   Card,
@@ -30,6 +32,7 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 // import USERLIST from '../_mock/user';
+
 
 // ----------------------------------------------------------------------
 
@@ -73,8 +76,23 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 export default function UserPage() {
+  
   const [open, setOpen] = useState(null);
+  
+  const [openModal, setOpenModal] = useState(false);
 
   const [page, setPage] = useState(0);
 
@@ -90,14 +108,19 @@ export default function UserPage() {
 
   const [users, setUsers] = useState([]);
 
+  
   useEffect(() => {
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
     // fetch("https://rickandmortyapi.com/api/character")
     fetch("http://localhost:3002/api/v1/products")
       .then((response) => response.json())
       .then((data) => {        
 
         // for (let i = 0; i < data.results.length; i+=1) {
-        //   setUsers(old => [...old, ...[{
+          // setUsers(old => [...old, ...[{
         //     id: data.results[i].id,
         //     avatarUrl: data.results[i].image,
         //     name: data.results[i].name,
@@ -115,13 +138,21 @@ export default function UserPage() {
             name: data[i].name,
             referencia: data[i].ref,
             quantity: data[i].quantity,
-            cost: data[i].cost.toString(),
-            price: data[i].price
+            cost: formatter.format(data[i].cost), 
+            price: formatter.format(data[i].price)
           }]]);
         }
 
       });
   }, []);
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+  
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -194,11 +225,26 @@ export default function UserPage() {
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Products
           </Typography>
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New User
+          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} onClick={handleOpenModal}>
+            New Prodct
           </Button>
+          <Modal
+          open={openModal}
+          onClose={handleCloseModal}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            <Typography id="modal-modal-title" variant="h6" component="h2">
+              Text in a modal
+            </Typography>
+            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+              Duis mollis, est non commodo luctus, nisi erat porttitor ligula. Hola
+            </Typography>
+          </Box>
+        </Modal>
         </Stack>
 
         <Card>
@@ -292,7 +338,7 @@ export default function UserPage() {
           </Scrollbar>
 
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[6, 12, 100]}
             component="div"
             // count={USERLIST.length}
             count={users.length}
